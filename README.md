@@ -2,7 +2,7 @@
 
 This project provides an in-depth analysis of NYC's homeless shelter data, focusing on uncovering trends, correlations, and actionable insights. The dataset captures daily counts of individuals in various population categories, such as single adults, families with children, and adult families, allowing us to understand the dynamics of homelessness in New York City.
 
-![NYC Homelessness Analysis](images/nyc_homeless_by_category.png)
+![NYC Homelessness Analysis](images/homeless_image_nyt.webp)
 
 ---
 
