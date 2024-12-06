@@ -52,18 +52,6 @@ The analysis employs the following steps using the `data_helpers.py` module:
    - Calculated statistical summaries, including averages, ranges, and peaks.
    - Identified the most and least populated days for shelters.
 
-### Room for Improvement
-
-This project sets the foundation for further improvements, including:
-- **Anomaly Detection**:
-  - Identify sudden surges or drops in shelter populations.
-- **Forecasting**:
-  - Use machine learning models (e.g., ARIMA, LSTM) to predict future trends.
-- **Demographic Analysis**:
-  - Incorporate additional demographic data to explore deeper insights.
-- **Policy Impact**:
-  - Assess the impact of specific policies or events on shelter populations.
-
 
 ## Visualizations
 
@@ -127,8 +115,7 @@ pip install -r requirements.txt
 ---
 
 ### Section 6: Insights
-```markdown
-## Insights
+
 
 ---
 
@@ -153,6 +140,18 @@ pip install -r requirements.txt
 
 These insights highlight key population dynamics and suggest areas for targeted policy action.
 
+
+### Room for Improvement
+
+This project sets the foundation for further improvements, including:
+- **Anomaly Detection**:
+  - Identify sudden surges or drops in shelter populations.
+- **Forecasting**:
+  - Use machine learning models (e.g., ARIMA, LSTM) to predict future trends.
+- **Demographic Analysis**:
+  - Incorporate additional demographic data to explore deeper insights.
+- **Policy Impact**:
+  - Assess the impact of specific policies or events on shelter populations.
 
 ## Future Directions
 
