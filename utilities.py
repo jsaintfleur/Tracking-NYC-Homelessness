@@ -5,7 +5,10 @@ from colorama import Fore, Style
 import importlib
 import utilities
 importlib.reload(utilities)
-
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from prophet import Prophet
 
 
 __all__ = [
@@ -18,6 +21,10 @@ __all__ = [
     "plot_monthly_trends",
     "plot_yearly_trends",
     "generate_report",
+    "linear_regression_analysis",
+    "forecast_with_prophet",
+    "anomaly_detection",
+    "generate_machine_learning_report",
 ]
 
 
@@ -38,6 +45,8 @@ def preprocess_data(df):
         print("Missing values detected. Filling with forward fill.")
         df.fillna(method='ffill', inplace=True)
     return df
+
+
 
 def summarize_data(df):
     """
@@ -168,6 +177,132 @@ def generate_correlation_summary(df):
     print(Fore.CYAN + "="*60 + Style.RESET_ALL)
 
 
+def linear_regression_analysis(df, target='total_individuals_in_shelter', correlation_threshold=0.6):
+    """
+    Perform multi-linear regression to predict the target variable based on high correlating factors.
+    
+    Parameters:
+    - df: DataFrame, the dataset
+    - target: str, the target variable to predict
+    - correlation_threshold: float, minimum correlation to include a feature
+    
+    Returns:
+    - None
+    """
+    # Select only numeric columns
+    numeric_df = df.select_dtypes(include=['float64', 'int64'])
+    
+    # Ensure the target variable is in the numeric DataFrame
+    if target not in numeric_df.columns:
+        print(f"Target variable '{target}' is not numeric or missing from the dataset.")
+        return
+    
+    # Calculate correlations with the target variable
+    correlation_matrix = numeric_df.corr()
+    high_corr_features = correlation_matrix[target][
+        (correlation_matrix[target].abs() >= correlation_threshold) & 
+        (correlation_matrix[target].abs() < 1.0)
+    ].index.tolist()
+
+    if not high_corr_features:
+        print("No features with high correlation found for regression.")
+        return
+    
+    # Define predictors and target
+    X = numeric_df[high_corr_features]
+    y = numeric_df[target]
+
+    # Split the dataset
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Train the regression model
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    # Make predictions
+    y_pred = model.predict(X_test)
+
+    # Display results
+    print("\nLinear Regression Analysis:")
+    print(f"Target Variable: {target.replace('_', ' ').title()}")
+    print(f"Features Used: {', '.join([f.replace('_', ' ').title() for f in high_corr_features])}")
+    print(f"Mean Squared Error: {mean_squared_error(y_test, y_pred):.2f}")
+    print(f"R^2 Score: {r2_score(y_test, y_pred):.2f}")
+    print("\nCoefficients:")
+    for predictor, coef in zip(high_corr_features, model.coef_):
+        print(f"  {predictor.replace('_', ' ').title()}: {coef:.2f}")
+    print("\n")
+
+
+
+
+
+def forecast_with_prophet(df):
+    """
+    Use Prophet to forecast total individuals in shelter.
+    """
+    forecast_df = df[['date_of_census', 'total_individuals_in_shelter']].rename(
+        columns={'date_of_census': 'ds', 'total_individuals_in_shelter': 'y'}
+    )
+    
+    model = Prophet()
+    model.fit(forecast_df)
+
+    future = model.make_future_dataframe(periods=365)
+    forecast = model.predict(future)
+
+    # Plot forecast
+    model.plot(forecast)
+    plt.title("Forecast of Total Individuals in Shelter (Prophet)", fontsize=14)
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel("Total Individuals in Shelter", fontsize=12)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+
+    # Components plot
+    model.plot_components(forecast)
+    plt.show()
+
+    print("Prophet Forecast Report:")
+    print(f"Forecasted Values for the Next 5 Days:\n{forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].head()}\n")
+
+def anomaly_detection(df):
+    """
+    Perform anomaly detection using Z-Score method.
+    """
+    df['z_score'] = (df['total_individuals_in_shelter'] - df['total_individuals_in_shelter'].mean()) / \
+                    df['total_individuals_in_shelter'].std()
+    anomalies = df[df['z_score'].abs() > 3]
+
+    print("Anomaly Detection Report:")
+    if anomalies.empty:
+        print("No anomalies detected.\n")
+    else:
+        print(f"Detected {len(anomalies)} anomalies:")
+        print(anomalies[['date_of_census', 'total_individuals_in_shelter', 'z_score']])
+    print("\n")
+
+def generate_machine_learning_report(df):
+    """
+    Generate a report combining all machine learning steps.
+    """
+    print("📊 Machine Learning and Forecasting Report\n")
+    print("=" * 60)
+
+    # Linear Regression Analysis
+    print("\n🔍 Step 1: Multi-Linear Regression Analysis")
+    linear_regression_analysis(df)
+
+    # Prophet Forecasting
+    print("\n🔮 Step 2: Time-Series Forecasting with Prophet")
+    forecast_with_prophet(df)
+
+    # Anomaly Detection
+    print("\n⚠️ Step 3: Anomaly Detection")
+    anomaly_detection(df)
+
+    print("=" * 60)
+    print("✅ Machine Learning Report Generated Successfully!\n")
 
 
 

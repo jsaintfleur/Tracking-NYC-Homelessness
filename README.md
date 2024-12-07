@@ -36,7 +36,7 @@ The purpose of this analysis is to:
 
 ## Methodology
 
-The analysis employs the following steps using the `data_helpers.py` module:
+The analysis employs the following steps using the `utilities.py` module:
 
 1. **Data Preprocessing**:
    - Standardized column names for consistency and ease of analysis.
@@ -101,11 +101,12 @@ pip install -r requirements.txt
 
 4. **Place the Dataset:**
 
-- Ensure DHS_Homeless_Shelter_Census.csv is in the project root directory.
+- Ensure `DHS_Homeless_Shelter_Census.csv` is in the project root directory.
 
 5. **Run the Main Script:**
 
-```python main.py
+   ```python 
+main.py
 ```
 
 6. **Output:**
