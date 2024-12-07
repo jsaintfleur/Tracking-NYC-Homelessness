@@ -1,7 +1,27 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from colorama import Fore, Style
+import importlib
+import utilities
+importlib.reload(utilities)
 
+
+
+__all__ = [
+    "load_data",
+    "preprocess_data",
+    "summarize_data",
+    "plot_time_series",
+    "plot_distribution",
+    "correlation_analysis",
+    "plot_monthly_trends",
+    "plot_yearly_trends",
+    "generate_report",
+]
+
+
+# Utility Functions
 def load_data(file_path):
     """
     Load the dataset from the given file path.
@@ -12,17 +32,11 @@ def preprocess_data(df):
     """
     Preprocess the dataset by handling missing values, formatting the date column, etc.
     """
-    # Rename columns for easier handling
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.lower()
-    
-    # Convert the 'date_of_census' column to datetime
     df['date_of_census'] = pd.to_datetime(df['date_of_census'])
-    
-    # Check for missing values and fill or remove them
     if df.isnull().values.any():
         print("Missing values detected. Filling with forward fill.")
         df.fillna(method='ffill', inplace=True)
-    
     return df
 
 def summarize_data(df):
@@ -40,52 +54,24 @@ def summarize_data(df):
 
 def plot_time_series(df, column, title="Time Series Trend"):
     """
-    Plot a time series trend for the specified column.
+    Plot a time series trend for the specified column using Seaborn.
     """
-    if 'date_of_census' not in df.columns or column not in df.columns:
-        raise ValueError("The DataFrame must have 'date_of_census' and the specified column.")
-    
-    plt.figure(figsize=(12, 6))
-    plt.plot(df['date_of_census'], df[column], label=column, marker='o')
-    plt.xlabel("Date")
-    plt.ylabel(column.replace('_', ' ').title())
-    plt.title(title)
-    plt.grid(True)
-    plt.legend()
+    sns.set_theme(style="whitegrid")
+    plt.figure(figsize=(14, 8))
+    sns.lineplot(data=df, x='date_of_census', y=column, marker="o", color="steelblue", linewidth=2.5)
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel(column.replace('_', ' ').title(), fontsize=12)
+    plt.title(title, fontsize=16, fontweight='bold')
+    plt.xticks(rotation=45, fontsize=10)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.legend([column.replace('_', ' ').title()], loc="upper left", fontsize=12)
+    plt.tight_layout()
     plt.show()
-
-def daily_report(df, date):
-    """
-    Generate a daily report for the given date.
-    """
-    if 'date_of_census' not in df.columns:
-        raise ValueError("The DataFrame must have a 'date_of_census' column.")
-    
-    date = pd.to_datetime(date)
-    report = df[df['date_of_census'] == date]
-    
-    if report.empty:
-        return f"No data available for {date.strftime('%Y-%m-%d')}."
-    return report
-
-def correlation_analysis(df):
-    """
-    Analyze correlations between numerical columns.
-    """
-    correlation = df.corr()
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation, annot=True, fmt='.2f', cmap='coolwarm')
-    plt.title("Correlation Matrix")
-    plt.show()
-    return correlation
 
 def plot_distribution(df, column):
     """
-    Plot the distribution of a specific column.
+    Plot the distribution of a specific column using Seaborn.
     """
-    if column not in df.columns:
-        raise ValueError(f"The specified column '{column}' is not in the DataFrame.")
-    
     plt.figure(figsize=(10, 6))
     sns.histplot(df[column], kde=True, bins=30)
     plt.title(f"Distribution of {column.replace('_', ' ').title()}")
@@ -93,90 +79,61 @@ def plot_distribution(df, column):
     plt.ylabel("Frequency")
     plt.show()
 
-def monthly_trends(df):
+def plot_monthly_trends(df):
     """
-    Aggregate data by month and visualize monthly trends.
+    Plot separate monthly trends for each key variable.
     """
     df['month'] = df['date_of_census'].dt.to_period('M')
-    monthly_data = df.groupby('month').sum()
-    
-    monthly_data.plot(figsize=(12, 6), marker='o')
-    plt.title("Monthly Trends")
-    plt.ylabel("Counts")
-    plt.xlabel("Month")
-    plt.grid(True)
-    plt.show()
-    
-    return monthly_data
+    numeric_cols = df.select_dtypes(include='number').columns
+    monthly_data = df.groupby('month')[numeric_cols].sum()
 
-def yearly_trends(df):
+    for col in numeric_cols:
+        plt.figure(figsize=(12, 6))
+        sns.lineplot(x=monthly_data.index.to_timestamp(), y=monthly_data[col], marker="o", label=col.replace('_', ' ').title())
+        plt.title(f"Monthly Trends: {col.replace('_', ' ').title()}", fontsize=16, fontweight='bold')
+        plt.xlabel("Month", fontsize=12)
+        plt.ylabel("Counts", fontsize=12)
+        plt.xticks(rotation=45)
+        plt.legend()
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.tight_layout()
+        plt.show()
+
+
+def plot_yearly_trends(df):
     """
-    Aggregate data by year and visualize yearly trends.
+    Plot separate yearly trends for each key variable.
     """
     df['year'] = df['date_of_census'].dt.year
-    yearly_data = df.groupby('year').sum()
-    
-    yearly_data.plot(figsize=(12, 6), marker='o')
-    plt.title("Yearly Trends")
-    plt.ylabel("Counts")
-    plt.xlabel("Year")
-    plt.grid(True)
-    plt.show()
-    
-    return yearly_data
+    numeric_cols = df.select_dtypes(include='number').columns
+    yearly_data = df.groupby('year')[numeric_cols].sum()
+
+    for col in numeric_cols:
+        plt.figure(figsize=(12, 6))
+        sns.lineplot(x=yearly_data.index, y=yearly_data[col], marker="o", label=col.replace('_', ' ').title())
+        plt.title(f"Yearly Trends: {col.replace('_', ' ').title()}", fontsize=16, fontweight='bold')
+        plt.xlabel("Year", fontsize=12)
+        plt.ylabel("Counts", fontsize=12)
+        plt.xticks(rotation=45)
+        plt.legend()
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.tight_layout()
+        plt.show()
 
 def generate_report(df):
     """
     Generate a comprehensive console report summarizing the data.
     """
-    # Key statistics
-    total_individuals_avg = df['total_individuals_in_shelter'].mean()
-    single_adults_avg = df['total_single_adults_in_shelter'].mean()
-    families_with_children_avg = df['families_with_children_in_shelter'].mean()
-    adult_families_avg = df['adult_families_in_shelter'].mean()
-    
-    # Date range
-    start_date = df['date_of_census'].min()
-    end_date = df['date_of_census'].max()
-    
-    # Trends
-    print("\nHomeless Shelter Census Report")
-    print("="*50)
-    print(f"Date Range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
-    print(f"Total Entries: {len(df)}")
-    print("\nKey Averages:")
-    print(f" - Average Total Individuals in Shelter: {total_individuals_avg:.2f}")
-    print(f" - Average Single Adults in Shelter: {single_adults_avg:.2f}")
-    print(f" - Average Families with Children in Shelter: {families_with_children_avg:.2f}")
-    print(f" - Average Adult Families in Shelter: {adult_families_avg:.2f}")
-    
-    print("\nMonthly Trends (Sum of Individuals in Shelter):")
-    monthly_data = df.groupby(df['date_of_census'].dt.to_period('M')).sum()
-    print(monthly_data['total_individuals_in_shelter'].head(12))  # Print the first 12 months
-    
-    print("\nYearly Trends (Sum of Individuals in Shelter):")
-    yearly_data = df.groupby(df['date_of_census'].dt.year).sum()
-    print(yearly_data['total_individuals_in_shelter'])
-    
-    print("\nDetailed Correlation Analysis:")
-    print(df.corr())
+    latest_data = df.iloc[-1]
+    numeric_cols = df.select_dtypes(include='number').columns
 
-if __name__ == "__main__":
-    # File Usage
-    file_path = 'DHS_Homeless_Shelter_Census.csv'
-    df = load_data(file_path)
-    df = preprocess_data(df)
-
-    # Generate summary and visualizations
-    summary = summarize_data(df)
-    print(summary)
-
-    plot_time_series(df, 'total_individuals_in_shelter', "Total Individuals in Shelter Over Time")
-    correlation = correlation_analysis(df)
-    plot_distribution(df, 'total_single_adults_in_shelter')
-    monthly_data = monthly_trends(df)
-    yearly_data = yearly_trends(df)
-
-    # Generate report in console
-    generate_report(df)
-
+    print(Fore.CYAN + "="*60)
+    print("🌟  HOMELESS SHELTER CENSUS REPORT  🌟")
+    print("="*60 + Style.RESET_ALL)
+    print(Fore.YELLOW + "🗓  Date Range:" + Style.RESET_ALL)
+    print(f"    From {df['date_of_census'].min().strftime('%Y-%m-%d')} to {df['date_of_census'].max().strftime('%Y-%m-%d')}")
+    print(Fore.YELLOW + "\n📊 Key Statistics:" + Style.RESET_ALL)
+    for col in numeric_cols:
+        print(f"    - Average {col.replace('_', ' ').title()}: {df[col].mean():,.2f}")
+        print(f"    - Latest {col.replace('_', ' ').title()}: {latest_data[col]:,}")
+    print("="*60)
