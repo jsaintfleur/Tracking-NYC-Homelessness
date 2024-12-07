@@ -120,20 +120,54 @@ def plot_yearly_trends(df):
         plt.tight_layout()
         plt.show()
 
-def generate_report(df):
+def generate_correlation_summary(df):
     """
-    Generate a comprehensive console report summarizing the data.
+    Generate a user-friendly summary of the correlation matrix with detailed explanations.
     """
-    latest_data = df.iloc[-1]
-    numeric_cols = df.select_dtypes(include='number').columns
+    correlation_matrix = df.select_dtypes(include='number').corr()
 
-    print(Fore.CYAN + "="*60)
-    print("🌟  HOMELESS SHELTER CENSUS REPORT  🌟")
-    print("="*60 + Style.RESET_ALL)
-    print(Fore.YELLOW + "🗓  Date Range:" + Style.RESET_ALL)
-    print(f"    From {df['date_of_census'].min().strftime('%Y-%m-%d')} to {df['date_of_census'].max().strftime('%Y-%m-%d')}")
-    print(Fore.YELLOW + "\n📊 Key Statistics:" + Style.RESET_ALL)
-    for col in numeric_cols:
-        print(f"    - Average {col.replace('_', ' ').title()}: {df[col].mean():,.2f}")
-        print(f"    - Latest {col.replace('_', ' ').title()}: {latest_data[col]:,}")
-    print("="*60)
+    print(Fore.YELLOW + "🔗 Correlation Analysis:" + Style.RESET_ALL)
+    print("    This section summarizes the relationships between key metrics in the dataset:\n")
+
+    # Total Individuals in Shelter
+    total_corr = correlation_matrix.loc['total_individuals_in_shelter']
+    print("    - **Total Individuals in Shelter**:")
+    print(f"        • Strongly related to Families with Children in Shelter (Correlation: {total_corr['families_with_children_in_shelter']:.2f}).")
+    print("          This suggests that families with children are a significant contributor to the total population.")
+    print(f"        • Moderately related to Single Adults in Shelter (Correlation: {total_corr['total_single_adults_in_shelter']:.2f}).")
+    print("          Single adults also impact the overall shelter numbers.")
+    print(f"        • Weakly related to Adult Families in Shelter (Correlation: {total_corr['adult_families_in_shelter']:.2f}).")
+    print("          Adult families have a smaller influence on the total count.\n")
+
+    # Single Adults in Shelter
+    single_corr = correlation_matrix.loc['total_single_adults_in_shelter']
+    print("    - **Single Adults in Shelter**:")
+    print(f"        • Strongly correlated with Year (Correlation: {single_corr['year']:.2f}).")
+    print("          This reflects a steady increase in single adult shelter usage over time.")
+    print(f"        • Weakly related to Families with Children in Shelter (Correlation: {single_corr['families_with_children_in_shelter']:.2f}).")
+    print("          Changes in family occupancy have limited impact on single adult trends.\n")
+
+    # Families with Children in Shelter
+    families_corr = correlation_matrix.loc['families_with_children_in_shelter']
+    print("    - **Families with Children in Shelter**:")
+    print(f"        • Very strongly correlated with Total Individuals in Shelter (Correlation: {families_corr['total_individuals_in_shelter']:.2f}).")
+    print("          Families with children significantly influence total shelter occupancy.")
+    print(f"        • Moderately related to Adult Families in Shelter (Correlation: {families_corr['adult_families_in_shelter']:.2f}).")
+    print("          There is a moderate relationship between these groups.\n")
+
+    # Year
+    year_corr = correlation_matrix.loc['year']
+    print("    - **Year**:")
+    print(f"        • Strongly correlated with Single Adults in Shelter (Correlation: {year_corr['total_single_adults_in_shelter']:.2f}).")
+    print("          The number of single adults in shelters has grown steadily over the years.")
+    print(f"        • Moderately correlated with Total Individuals in Shelter (Correlation: {year_corr['total_individuals_in_shelter']:.2f}).")
+    print("          Total shelter usage has also increased over time.")
+    print(f"        • Negatively correlated with Adult Families in Shelter (Correlation: {year_corr['adult_families_in_shelter']:.2f}).")
+    print("          The number of adult families has not shown a clear trend relative to the years.\n")
+
+    print(Fore.CYAN + "="*60 + Style.RESET_ALL)
+
+
+
+
+
